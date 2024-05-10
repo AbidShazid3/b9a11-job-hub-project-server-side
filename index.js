@@ -6,7 +6,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
-app.use(cors());
+app.use(cors({ origin: ['http://localhost:5173'], credentials: true }));
 app.use(express.json());
 
 
@@ -28,6 +28,11 @@ async function run() {
         await client.connect();
 
         const jobsCollection = client.db('jobDB').collection('jobs');
+
+        app.get('/jobs', async (req, res) => {
+            const result = await jobsCollection.find().toArray();
+            res.send(result);
+        })
 
         app.post('/jobs', async (req, res) => {
             const job = req.body;
