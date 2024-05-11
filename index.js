@@ -50,6 +50,16 @@ async function run() {
             res.send(result);
         })
 
+        // my job related
+        app.get('/jobs', async (req, res) => {
+            let query = {};
+            if (req.query?.email) {
+                query = { email: req.query.email }
+            }
+            const result = await jobsCollection.find(query);
+            res.send(result);
+        })
+
         app.post('/jobs', async (req, res) => {
             const job = req.body;
             console.log(job);
@@ -57,16 +67,13 @@ async function run() {
             res.send(result);
         })
 
-        // my job related
-        app.get('/jobs', async (req, res) => {
-            let query = {};
-            if (req.query?.email) {
-                query = { email: req.query.email}
-            }
-            const result = await jobsCollection.find(query);
+        app.delete('/jobs/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await jobsCollection.deleteOne(query);
             res.send(result);
         })
-        
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
