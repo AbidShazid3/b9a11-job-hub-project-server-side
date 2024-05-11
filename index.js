@@ -56,6 +56,16 @@ async function run() {
             const result = await jobsCollection.insertOne(job);
             res.send(result);
         })
+
+        // my job related
+        app.get('/jobs', async (req, res) => {
+            let query = {};
+            if (req.query?.email) {
+                query = { email: req.query.email}
+            }
+            const result = await jobsCollection.find(query);
+            res.send(result);
+        })
         
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
