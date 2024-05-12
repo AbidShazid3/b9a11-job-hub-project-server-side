@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
@@ -22,6 +23,12 @@ const client = new MongoClient(uri, {
     }
 });
 
+const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+}
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
@@ -29,6 +36,18 @@ async function run() {
 
         const jobsCollection = client.db('jobDB').collection('jobs');
         const jobsCustomerCollection = client.db('jobDB').collection('customer');
+
+        // auth relate
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.cookie('token', token, cookieOptions).send({ success: true });
+        })
+
+        app.post('/logout', async (req, res) => {
+            const user = req.body;
+            res.clearCookie('token', { ...cookieOptions, maxAge: 0}).send({ success: true })
+        })
 
         // customer related
         app.get('/customer', async (req, res) => {
@@ -51,12 +70,13 @@ async function run() {
         })
 
         // my job related
-        app.get('/jobs', async (req, res) => {
+        app.get('/myJob', async (req, res) => {
+            
             let query = {};
             if (req.query?.email) {
-                query = { email: req.query.email }
+                query = { userEmail: req.query.email }
             }
-            const result = await jobsCollection.find(query);
+            const result = await jobsCollection.find(query).toArray();
             res.send(result);
         })
 
