@@ -139,7 +139,22 @@ async function run() {
         })
 
         // applied job related
-        app.post('/applies', async (req, res) => {
+        app.get('/applied', verifyToken, async (req, res) => {
+            console.log(req.query.email)
+            console.log('token owner info', req.user);
+            if (req.user.email !== req.query.email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            
+            let query = {}
+            if (req.query?.email) {
+                query = { email: req.query.email}
+            }
+            const result = await jobsAppliedCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.post('/applied', async (req, res) => {
             const appliedJob = req.body;
             // check 
             const query = {
@@ -154,11 +169,11 @@ async function run() {
             const result = await jobsAppliedCollection.insertOne(appliedJob);
 
             // update apply count
-            // const updateDoc = {
-            //     $inc: { jobApplicants : 1},
-            // }
-            // const jobQuery = { _id: new ObjectId(appliedJob.jobId) }
-            // const updateApplyCount = await jobsCollection.updateOne(jobQuery, updateDoc);
+            const updateDoc = {
+                $inc: { jobApplicants : 1},
+            }
+            const jobQuery = { _id: new ObjectId(appliedJob.jobId) }
+            const updateApplyCount = await jobsCollection.updateOne(jobQuery, updateDoc);
 
             res.send(result);
         })
