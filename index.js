@@ -8,7 +8,13 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
-app.use(cors({ origin: ['http://localhost:5173'], credentials: true }));
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+        'https://job-hub-97970.web.app',
+        'https://job-hub-97970.firebaseapp.com'
+    ], credentials: true
+}));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -49,7 +55,7 @@ const cookieOptions = {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const jobsCollection = client.db('jobDB').collection('jobs');
         const jobsCustomerCollection = client.db('jobDB').collection('customer');
@@ -179,7 +185,7 @@ async function run() {
         })
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
