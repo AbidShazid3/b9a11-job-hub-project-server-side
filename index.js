@@ -53,6 +53,7 @@ async function run() {
 
         const jobsCollection = client.db('jobDB').collection('jobs');
         const jobsCustomerCollection = client.db('jobDB').collection('customer');
+        const jobsAppliedCollection = client.db('jobDB').collection('applied');
 
         // auth relate
         app.post('/jwt', async (req, res) => {
@@ -63,7 +64,7 @@ async function run() {
 
         app.post('/logout', async (req, res) => {
             const user = req.body;
-            res.clearCookie('token', { ...cookieOptions, maxAge: 0}).send({ success: true })
+            res.clearCookie('token', { ...cookieOptions, maxAge: 0 }).send({ success: true })
         })
 
         // customer related
@@ -86,10 +87,11 @@ async function run() {
             res.send(result);
         })
 
+
         // my job related
         app.get('/myJob', verifyToken, async (req, res) => {
-            console.log(req.query.email)
-            console.log('token owner info', req.user);
+            // console.log(req.query.email)
+            // console.log('token owner info', req.user);
             if (req.user.email !== req.query.email) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
@@ -103,10 +105,10 @@ async function run() {
 
         app.post('/jobs', async (req, res) => {
             const job = req.body;
-            console.log(job);
             const result = await jobsCollection.insertOne(job);
             res.send(result);
         })
+
 
         app.put('/jobs/:id', async (req, res) => {
             const id = req.params.id;
@@ -129,10 +131,35 @@ async function run() {
             res.send(result);
         })
 
-        app.delete('/jobs/:id', async (req, res) => {
+        app.delete('/myJob/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await jobsCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        // applied job related
+        app.post('/applies', async (req, res) => {
+            const appliedJob = req.body;
+            // check 
+            const query = {
+                email: appliedJob.email,
+                jobId: appliedJob.jobId
+            }
+            const alreadyApplied = await jobsAppliedCollection.findOne(query);
+            if (alreadyApplied) {
+                return res.status(400).send('Already Applied.');
+            }
+
+            const result = await jobsAppliedCollection.insertOne(appliedJob);
+
+            // update apply count
+            // const updateDoc = {
+            //     $inc: { jobApplicants : 1},
+            // }
+            // const jobQuery = { _id: new ObjectId(appliedJob.jobId) }
+            // const updateApplyCount = await jobsCollection.updateOne(jobQuery, updateDoc);
+
             res.send(result);
         })
 
